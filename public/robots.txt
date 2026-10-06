@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://grasp-cascade.dev/sitemap.xml
+Sitemap: https://www.grasp-cascade.dev/sitemap.xml
