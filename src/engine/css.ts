@@ -236,6 +236,34 @@ export function selectorNotes(css: string, blocks: { start: number; end: number 
   return { lead, lines }
 }
 
+export function selectorIdentity(css: string) {
+  return selectorSketch(css, parseCss(css).blocks)
+}
+
+export function selectorSketch(css: string, blocks: { start: number; end: number }[]) {
+  const parts: string[] = []
+  for (const block of blocks) {
+    const brace = css.indexOf('{', block.start)
+    if (brace < 0 || brace > block.end) continue
+    for (const piece of splitTopOffsets(css.slice(block.start, brace))) {
+      const at = block.start + piece.start
+      const lineStart = css.lastIndexOf('\n', at - 1) + 1
+      parts.push(`${lineOf(css, at)}:${at - lineStart}:${piece.text}`)
+    }
+  }
+  return parts.join('\n')
+}
+
+export function keepSelectorNotes<T extends { lead: SelectorNote | null; lines: (SelectorNote | null)[] }>(
+  previous: { sketch: string; notes: T } | null,
+  css: string,
+) {
+  const blocks = parseCss(css).blocks
+  const sketch = selectorSketch(css, blocks)
+  if (previous && previous.sketch === sketch) return previous
+  return { sketch, notes: selectorNotes(css, blocks) as T }
+}
+
 export function spaceSelectors(css: string) {
   const blocks = parseCss(css).blocks
   const starts: { at: number; blanks: number }[] = layerStarts(css).map((at) => ({ at, blanks: 1 }))

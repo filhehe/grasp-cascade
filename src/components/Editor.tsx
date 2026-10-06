@@ -1,12 +1,11 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
+import { memo, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { createPortal } from 'react-dom'
 import { indentCssKey } from '../cssIndent.ts'
-import { selectorNotes, usageFor, type PropertyHit, type SelectorNote, type SourceSpan } from '../engine/css.ts'
+import { type PropertyHit, type SelectorNote, type SourceSpan } from '../engine/css.ts'
+import { linkLabel } from '../engine/shorthand.ts'
+import { editorPanes } from './editorPanes.ts'
 
 const NO_NOTES = { lead: null as SelectorNote | null, lines: [] as (SelectorNote | null)[] }
-
-const NO_USAGE = { cssUnused: [] as SourceSpan[], htmlUnused: [] as SourceSpan[] }
-import { linkLabel } from '../engine/shorthand.ts'
 import { highlight } from '../highlight.ts'
 import type { Step } from '../engine/model.ts'
 import { useCascade } from '../store.ts'
@@ -89,12 +88,8 @@ function Field({
   onChange: (value: string) => void
   onPick: (property: string, selectors: string[], on: boolean) => void
 }) {
-  const steps = useCascade((state) => state.steps)
-  const index = useCascade((state) => state.index)
-  const seek = useCascade((state) => state.seek)
   const lines = useMemo(() => highlight(value, source), [value, source])
   const starts = useMemo(() => lineStarts(value), [value])
-  const current = lineOf(steps, index, source)
   const pickedHits = useMemo(() => hits.filter((hit) => picked.includes(hit.property)), [hits, picked])
   const propertyNames = useMemo(() => [...new Set(hits.map((hit) => hit.property))], [hits])
   const [tip, setTip] = useState<{ text: string; x: number; y: number } | null>(null)
@@ -146,8 +141,9 @@ function Field({
   }, [tip])
 
   function seekLine(line: number) {
-    const found = stepForLine(steps, source, line)
-    if (found >= 0) seek(found)
+    const state = useCascade.getState()
+    const found = stepForLine(state.steps, source, line)
+    if (found >= 0) state.seek(found)
   }
 
   return (
@@ -155,31 +151,14 @@ function Field({
       <div className="editor-caption">{label}</div>
       <div className="editor-scroll">
         <div className="editor-sheet">
-          <div className="editor-gutter" aria-hidden="true">
-            {lines.map((_, line) => {
-              const start = starts[line] ?? 0
-              const end = line + 1 < starts.length ? starts[line + 1] - 1 : value.length
-              const quiet = end > start && unused.some((range) => start >= range.start && end <= range.end)
-              const tone = [current === line + 1 ? 'is-current' : '', quiet ? 'is-unused' : ''].filter(Boolean).join(' ')
-              return (
-                <span key={line} className={tone || undefined} onClick={() => seekLine(line + 1)}>
-                  {line + 1}
-                </span>
-              )
-            })}
-          </div>
+          <Gutter value={value} source={source} unused={unused} starts={starts} onSeek={seekLine} />
           <div className="editor-code">
             {notes.lead ? (
               <span className="selector-note is-lead" style={{ '--note-indent': notes.lead.indent } as CSSProperties}>
                 {notes.lead.label}
               </span>
             ) : null}
-            {current != null ? (
-              <div
-                className="editor-line"
-                style={{ top: `calc(var(--editor-pad-y) + ${current - 1} * var(--editor-line))` }}
-              />
-            ) : null}
+            <LineCursor source={source} />
             <pre className="editor-text editor-paint" aria-hidden="true">
               {lines.map((tokens, line) => {
                 let column = starts[line] ?? 0
@@ -280,6 +259,68 @@ function Field({
   )
 }
 
+function Gutter({
+  value,
+  source,
+  unused,
+  starts,
+  onSeek,
+}: {
+  value: string
+  source: 'css' | 'html'
+  unused: SourceSpan[]
+  starts: number[]
+  onSeek: (line: number) => void
+}) {
+  const current = useCascade((state) => lineOf(state.steps, state.index, source))
+  return (
+    <div className="editor-gutter" aria-hidden="true">
+      {starts.map((start, line) => {
+        const end = line + 1 < starts.length ? starts[line + 1] - 1 : value.length
+        const quiet = end > start && unused.some((range) => start >= range.start && end <= range.end)
+        const tone = [current === line + 1 ? 'is-current' : '', quiet ? 'is-unused' : ''].filter(Boolean).join(' ')
+        return (
+          <span key={line} className={tone || undefined} onClick={() => onSeek(line + 1)}>
+            {line + 1}
+          </span>
+        )
+      })}
+    </div>
+  )
+}
+
+function LineCursor({ source }: { source: 'css' | 'html' }) {
+  const current = useCascade((state) => lineOf(state.steps, state.index, source))
+  if (current == null) return null
+  return <div className="editor-line" style={{ top: `calc(var(--editor-pad-y) + ${current - 1} * var(--editor-line))` }} />
+}
+
+const HtmlEditor = memo(function HtmlEditor() {
+  const pane = useCascade(editorPanes.html)
+  const setHtml = useCascade((state) => state.setHtml)
+  const pickProperty = useCascade((state) => state.pickProperty)
+  return <Field label="HTML" source="html" value={pane.html} unused={pane.unused} hits={[]} picked={[]} notes={NO_NOTES} onChange={setHtml} onPick={pickProperty} />
+})
+
+const CssEditor = memo(function CssEditor() {
+  const pane = useCascade(editorPanes.css)
+  const setCss = useCascade((state) => state.setCss)
+  const pickProperty = useCascade((state) => state.pickProperty)
+  return (
+    <Field
+      label="CSS"
+      source="css"
+      value={pane.css}
+      unused={pane.unused}
+      hits={pane.hits}
+      picked={pane.picked}
+      notes={pane.notes}
+      onChange={setCss}
+      onPick={pickProperty}
+    />
+  )
+})
+
 const SPLIT_KEY = 'grasp-cascade-editor-split'
 const SPLIT_MIN = 18
 const SPLIT_MAX = 82
@@ -300,23 +341,6 @@ function readSplit() {
 }
 
 export function Editor() {
-  const html = useCascade((state) => state.html)
-  const css = useCascade((state) => state.css)
-  const target = useCascade((state) => state.target)
-  const properties = useCascade((state) => state.properties)
-  const setHtml = useCascade((state) => state.setHtml)
-  const setCss = useCascade((state) => state.setCss)
-  const pickProperty = useCascade((state) => state.pickProperty)
-  const doc = useCascade((state) => state.doc)
-  const parsedHtml = useCascade((state) => state.parsedHtml)
-  const parsedCss = useCascade((state) => state.parsedCss)
-  const live = parsedHtml === html && parsedCss === css
-  const usage = useMemo(
-    () => (live ? usageFor(doc, html, css, target) : NO_USAGE),
-    [live, doc, html, css, target],
-  )
-  const hits = live ? doc.propertyHits : []
-  const notes = useMemo(() => (live ? selectorNotes(css, doc.blocks) : NO_NOTES), [live, css, doc])
   const splitRef = useRef<HTMLDivElement>(null)
   const dragRef = useRef(false)
   const [htmlShare, setHtmlShare] = useState(readSplit)
@@ -343,7 +367,7 @@ export function Editor() {
       className={`editor-split ${dragging ? 'is-dragging' : ''}`}
       style={{ '--editor-html': `${htmlShare}%` } as CSSProperties}
     >
-      <Field label="HTML" source="html" value={html} unused={usage.htmlUnused} hits={[]} picked={[]} notes={NO_NOTES} onChange={setHtml} onPick={pickProperty} />
+      <HtmlEditor />
       <button
         type="button"
         className={`editor-split-handle ${dragging ? 'is-dragging' : ''}`}
@@ -383,7 +407,7 @@ export function Editor() {
           setHtmlShare((share) => clampSplit(Math.round((share + delta) * 10) / 10))
         }}
       />
-      <Field label="CSS" source="css" value={css} unused={usage.cssUnused} hits={hits} picked={properties} notes={notes} onChange={setCss} onPick={pickProperty} />
+      <CssEditor />
     </div>
   )
 }

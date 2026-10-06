@@ -1,4 +1,5 @@
-import { createElement } from 'react'
+import { createElement, useMemo } from 'react'
+import { restingStyle } from '../engine/cascade.ts'
 import { initialValue, resolveElement } from '../engine/css.ts'
 import { isShorthand, linkLabel, longhands, sets } from '../engine/shorthand.ts'
 import { isElement, type Decision, type ElementNode, type Node } from '../engine/model.ts'
@@ -15,6 +16,7 @@ export function ElementView() {
   const step = index >= 0 ? steps[index] : undefined
   const decisions = step?.decisions ?? {}
   const element = resolveElement(doc.elements, target)
+  const resting = useMemo(() => (element ? restingStyle(element, doc, properties) : {}), [element, doc, properties])
 
   return (
     <div className="element-view">
@@ -23,7 +25,7 @@ export function ElementView() {
           <p className="sample-missing">{error}</p>
         ) : (
           doc.root.children.map((node, nodeIndex) => (
-            <SampleNode key={nodeIndex} node={node} target={element} decisions={decisions} properties={properties} />
+            <SampleNode key={nodeIndex} node={node} target={element} decisions={decisions} properties={properties} resting={resting} />
           ))
         )}
       </div>
@@ -58,29 +60,35 @@ function SampleNode({
   target,
   decisions,
   properties,
+  resting,
 }: {
   node: Node
   target: ElementNode | null
   decisions: Record<string, Decision>
   properties: string[]
+  resting: Record<string, string>
 }) {
   if (!isElement(node)) return node.text
   const isTarget = node === target
   const style: Record<string, string> = {}
+  if (isTarget) {
+    for (const [property, value] of Object.entries(resting)) style[camel(property)] = value
+  }
   for (const decl of node.inline) {
     if (isTarget && properties.includes(decl.property) && !decisions[decl.property]) continue
     if (isTarget && decisions[decl.property]) continue
+    if (isTarget && decl.property in resting) continue
     style[camel(decl.property)] = decl.value
   }
-    if (isTarget) {
-      for (const property of properties) {
-        const decision = decisions[property]
-        if (decision) style[camel(property)] = decision.value
-        else if (!isShorthand(property)) style[camel(property)] = initialValue(property)
-      }
+  if (isTarget) {
+    for (const property of properties) {
+      const decision = decisions[property]
+      if (decision) style[camel(property)] = decision.value
+      else if (!isShorthand(property)) style[camel(property)] = initialValue(property)
     }
+  }
   const children = node.children.map((child, index) => (
-    <SampleNode key={index} node={child} target={target} decisions={decisions} properties={properties} />
+    <SampleNode key={index} node={child} target={target} decisions={decisions} properties={properties} resting={resting} />
   ))
   return createElement(sampleHost(node.tag), { style }, isVoidTag(node.tag) ? undefined : children)
 }

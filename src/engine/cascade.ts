@@ -55,6 +55,23 @@ export function buildRun(input: Input, prepared?: ReturnType<typeof parseDocumen
   return { steps, notices: doc.notices as Notice[], error: null as string | null, doc }
 }
 
+export function restingStyle(element: ElementNode, doc: ReturnType<typeof parseDocument>, selected: string[]) {
+  const style: Record<string, string> = {}
+  const groups = new Map<string, Decl[]>()
+  for (const decl of declarationsFor(element, doc)) {
+    if (selected.some((name) => sets(name, decl.property) || sets(decl.property, name))) continue
+    const list = groups.get(decl.property) ?? []
+    list.push(decl)
+    groups.set(decl.property, list)
+  }
+  for (const [property, decls] of groups) {
+    const alive = decls.filter((decl) => !decl.invalid)
+    if (!alive.length) continue
+    style[property] = maxRank(alive, doc.layers).value
+  }
+  return style
+}
+
 function resolveProperty(
   property: string,
   own: Working[],

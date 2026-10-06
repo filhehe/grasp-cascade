@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict'
 import { EXAMPLES } from '../examples.ts'
-import { buildRun } from './cascade.ts'
+import { buildRun, restingStyle } from './cascade.ts'
 import { indentCssKey } from '../cssIndent.ts'
-import { focusProperty, parseDocument, parseSelector, propertyHits, selectorNotes, sourceUsage, spaceSelectors, specificityOf } from './css.ts'
+import { focusProperty, keepSelectorNotes, parseDocument, parseSelector, propertyHits, resolveElement, selectorNotes, sourceUsage, spaceSelectors, specificityOf } from './css.ts'
 import { componentValue, contested, linkLabel, shares, syncProperties, toggleGroup } from './shorthand.ts'
 import type { Scenario } from './model.ts'
 
@@ -142,6 +142,20 @@ for (const example of EXAMPLES) {
   assert.equal(notes.lines[inner - 1]?.label, '(0, 0, 2)')
   assert.equal(notes.lines[inner - 2], null)
   assert.equal(spaceSelectors(css), css)
+}
+
+{
+  const before = '.a {\n  color: teal;\n}\n\n\n#b {\n  color: coral;\n}\n'
+  const propertyEdit = '.a {\n  color: red;\n}\n\n\n#b {\n  color: navy;\n}\n'
+  const selectorEdit = '.a.a {\n  color: red;\n}\n\n\n#b {\n  color: navy;\n}\n'
+  const held = keepSelectorNotes(null, before)
+  const same = keepSelectorNotes(held, propertyEdit)
+  assert.equal(same, held)
+  assert.equal(held.notes.lead?.label, '(0, 1, 0)')
+  const next = keepSelectorNotes(held, selectorEdit)
+  assert.notEqual(next, held)
+  assert.equal(next.notes.lead?.label, '(0, 2, 0)')
+  assert.equal(next.notes.lines.find((note) => note?.label === '(1, 0, 0)')?.label, '(1, 0, 0)')
 }
 
 {
@@ -346,6 +360,24 @@ for (const example of EXAMPLES) {
   })
   assert.equal(margin.steps.at(-1)?.decisions['margin-top'].value, '1px')
   assert.match(margin.steps.map((step) => step.message).join('\n'), /сокращение margin[\s\S]*margin-top[\s\S]*8px/)
+}
+
+{
+  const html = '<h1 class="main-heading">This is my heading.</h1>'
+  const css = '.main-heading {\n  color: red;\n}\nh1 {\n  color: #f55;\n  border: 2px solid;\n}\n'
+  const doc = parseDocument(html, css)
+  const element = resolveElement(doc.elements, 'h1.main-heading')
+  assert.ok(element)
+  const resting = restingStyle(element, doc, ['color'])
+  assert.equal(resting.border, '2px solid')
+  assert.equal(resting.color, undefined)
+  const run = buildRun({ html, css, target: 'h1.main-heading', properties: ['color'] })
+  assert.equal(run.steps.some((step) => step.property === 'border'), false)
+  const both = restingStyle(element, doc, [])
+  assert.equal(both.color, 'red')
+  assert.equal(both.border, '2px solid')
+  const stronger = parseDocument(html, 'h1 {\n  border: 1px solid;\n}\n.main-heading {\n  border: 4px dashed;\n}\n')
+  assert.equal(restingStyle(resolveElement(stronger.elements, 'h1')!, stronger, []).border, '4px dashed')
 }
 
 console.log(EXAMPLES.map((example) => `${example.id} ${run(example).steps.length}`).join('\n'))

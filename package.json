@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
-    "test": "tsx src/engine/cascade.test.ts && tsx src/components/selectOpen.test.ts && tsx src/components/sampleHost.test.ts",
+    "test": "tsx src/engine/cascade.test.ts && tsx src/components/selectOpen.test.ts && tsx src/components/sampleHost.test.ts && tsx src/components/editorPanes.test.ts",
     "preview": "vite preview"
   },
   "dependencies": {
