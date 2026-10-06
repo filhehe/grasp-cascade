@@ -59,7 +59,7 @@ function Logo() {
   )
 }
 
-export function Toolbar() {
+export function Toolbar({ onTour }: { onTour: () => void }) {
   const [level, setLevel] = useState<Level | 'all'>('all')
   const [menu, setMenu] = useState(false)
   const [help, setHelp] = useState(false)
@@ -135,7 +135,7 @@ export function Toolbar() {
         </div>
         <button
           type="button"
-          className={`toolbar-btn header-sheet-btn ${sheet ? 'is-open' : ''}`}
+          className={`toolbar-btn header-sheet-btn header-bar-action ${sheet ? 'is-open' : ''}`}
           aria-expanded={sheet}
           onClick={() => {
             setHelp(false)
@@ -145,14 +145,26 @@ export function Toolbar() {
         >
           Шпаргалка
         </button>
-        <a className="toolbar-btn header-thanks" href="https://pay.cloudtips.ru/p/02f62c5c" target="_blank" rel="noopener noreferrer">
+        <button
+          type="button"
+          className="toolbar-btn header-tour-btn header-bar-action"
+          onClick={() => {
+            setHelp(false)
+            setSheet(false)
+            setMenu(false)
+            onTour()
+          }}
+        >
+          Обзор
+        </button>
+        <a className="toolbar-btn header-thanks header-bar-action" href="https://pay.cloudtips.ru/p/02f62c5c" target="_blank" rel="noopener noreferrer">
           Сказать спасибо
         </a>
         <button
           ref={burgerRef}
           type="button"
           className={`header-burger ${menu ? 'is-open' : ''}`}
-          aria-label="Пример, уровень и интервал"
+          aria-label="Меню"
           aria-expanded={menu}
           onClick={() => {
             setHelp(false)
@@ -166,6 +178,35 @@ export function Toolbar() {
         </button>
         <div className="header-controls">
           <div ref={menuRef} className={`header-menu ${menu ? 'is-open' : ''}`}>
+            <div className="header-menu-actions">
+              <button
+                type="button"
+                className={`toolbar-btn header-sheet-btn ${sheet ? 'is-open' : ''}`}
+                aria-expanded={sheet}
+                onClick={() => {
+                  setHelp(false)
+                  setMenu(false)
+                  setSheet((open) => !open)
+                }}
+              >
+                Шпаргалка
+              </button>
+              <button
+                type="button"
+                className="toolbar-btn header-tour-btn"
+                onClick={() => {
+                  setHelp(false)
+                  setSheet(false)
+                  setMenu(false)
+                  onTour()
+                }}
+              >
+                Обзор
+              </button>
+              <a className="toolbar-btn header-thanks" href="https://pay.cloudtips.ru/p/02f62c5c" target="_blank" rel="noopener noreferrer" onClick={() => setMenu(false)}>
+                Сказать спасибо
+              </a>
+            </div>
             <div className="header-field header-field-level">
               Уровень
               <Select

@@ -113,6 +113,52 @@ button:disabled { cursor: default; }
 
 .header-sheet-btn.is-open { background: #202633; color: #7dd3fc; }
 
+.tour { position: fixed; inset: 0; z-index: 80; pointer-events: none; }
+.tour-shade {
+  position: fixed;
+  z-index: 80;
+  background: rgba(7, 8, 11, 0.72);
+  pointer-events: auto;
+}
+.tour-ring {
+  position: fixed;
+  z-index: 81;
+  border: 2px solid #5eead4;
+  border-radius: 12px;
+  pointer-events: none;
+  box-shadow: 0 0 0 1px rgba(94, 234, 212, 0.35);
+}
+.tour-card {
+  position: fixed;
+  z-index: 82;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  background: #141820;
+  padding: 16px;
+  color: #c5d0e0;
+  font-size: 14px;
+  line-height: 1.5;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+  pointer-events: auto;
+}
+.tour-card h2 { margin: 0; color: #fff; font-size: 18px; font-weight: 600; }
+.tour-card p { margin: 8px 0 0; }
+.tour-progress { margin: 0; color: #7dd3fc; font-size: 12px; font-weight: 600; letter-spacing: 0.04em; }
+.tour-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; }
+.tour-nav { display: flex; gap: 8px; }
+.tour-skip {
+  border: 0;
+  background: transparent;
+  color: #8ea0b8;
+  padding: 0;
+  font-size: 13px;
+}
+.tour-skip:hover { color: #fff; }
+.tour-card .toolbar-btn:disabled { opacity: 0.45; }
+@media (prefers-reduced-motion: reduce) {
+  .tour-ring { transition: none; }
+}
+
 .header-sheet {
   position: absolute;
   top: 100%;
@@ -221,6 +267,7 @@ button:disabled { cursor: default; }
 }
 
 .header-menu { display: contents; }
+.header-menu-actions { display: none; }
 
 .header-field {
   display: flex;
@@ -1032,10 +1079,11 @@ button:disabled { cursor: default; }
 }
 
 @media (max-width: 639px) {
+  .header-bar { gap: 8px; }
   .header-brand { flex: 1; min-width: 0; order: 1; }
-  .header-brand h1 { overflow: hidden; text-overflow: ellipsis; }
-  .header-sheet-btn { order: 2; }
-  .header-thanks { order: 3; flex: none; height: 36px; padding: 0 10px; }
+  .header-bar-action { display: none; }
+  .header-menu-actions { display: flex; flex-direction: column; gap: 8px; }
+  .header-menu-actions .toolbar-btn { width: 100%; height: 44px; }
   .header-burger { display: inline-flex; order: 4; }
   .header-controls { display: contents; }
   .header-menu {
@@ -1053,6 +1101,18 @@ button:disabled { cursor: default; }
   .header-menu .header-field { flex-direction: column; align-items: stretch; }
   .header-menu .ui-select-field { width: 100%; }
   .header-menu .ui-select, .header-menu .ui-select-level { width: 100%; height: 44px; }
-  .run-controls { height: 60px; }
-  .run-controls .toolbar-btn { height: 44px; }
+  .app-shell { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
+  .run-controls {
+    position: fixed;
+    z-index: 15;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    height: auto;
+    flex-wrap: wrap;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    background: #07080b;
+    padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+  }
+  .run-controls .toolbar-btn { height: 44px; padding: 0 8px; }
 }

@@ -1,17 +1,36 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { BlockHelp } from './components/BlockHelp.tsx'
 import { Candidates } from './components/Candidates.tsx'
 import { Editor } from './components/Editor.tsx'
 import { ElementView } from './components/ElementView.tsx'
+import { ONBOARDING_KEY, Onboarding } from './components/Onboarding.tsx'
 import { RunControls } from './components/StepBanner.tsx'
 import { StepTape } from './components/StepTape.tsx'
 import { Toolbar } from './components/Toolbar.tsx'
 import { useCascade } from './store.ts'
 
+function tourPending() {
+  try {
+    return localStorage.getItem(ONBOARDING_KEY) !== 'done'
+  } catch {
+    return true
+  }
+}
+
 export default function App() {
   const status = useCascade((state) => state.status)
   const speed = useCascade((state) => state.speed)
   const tick = useCascade((state) => state.tick)
+  const [tour, setTour] = useState(tourPending)
+
+  function closeTour() {
+    try {
+      localStorage.setItem(ONBOARDING_KEY, 'done')
+    } catch {
+      // приватный режим может запретить запись
+    }
+    setTour(false)
+  }
 
   useEffect(() => {
     if (status !== 'playing') return
@@ -37,7 +56,8 @@ export default function App() {
 
   return (
     <div className="app-shell">
-      <Toolbar />
+      <Toolbar onTour={() => setTour(true)} />
+      {tour ? <Onboarding onClose={closeTour} /> : null}
       <main className="stage">
         <section className="panel zone zone-editor">
           <h2 className="zone-label">
