@@ -4,13 +4,60 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <title>Grasp Cascade — каскад CSS по шагам</title>
+    <title>Каскад CSS по шагам — специфичность для новичков и мидлов</title>
     <meta
       name="description"
-      content="Пошаговый разбор каскада CSS: откуда правило, какой у него вес, кто его перебил и почему победило именно оно."
+      content="Тренажёр каскада CSS для тех, кто изучает фронтенд. Новичкам и мидлам: почему победил селектор, как считается специфичность, !important и слои @layer."
     />
+    <link rel="canonical" href="https://grasp-cascade.dev/" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
     <meta name="theme-color" content="#07080b" />
     <meta name="color-scheme" content="dark" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="ru_RU" />
+    <meta property="og:site_name" content="Grasp Cascade" />
+    <meta property="og:url" content="https://grasp-cascade.dev/" />
+    <meta property="og:title" content="Каскад CSS по шагам — специфичность для новичков и мидлов" />
+    <meta
+      property="og:description"
+      content="Тренажёр каскада CSS для тех, кто изучает фронтенд. Новичкам и мидлам: почему победил селектор, как считается специфичность, !important и слои @layer."
+    />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Каскад CSS по шагам — специфичность для новичков и мидлов" />
+    <meta
+      name="twitter:description"
+      content="Тренажёр каскада CSS для тех, кто изучает фронтенд. Новичкам и мидлам: почему победил селектор, как считается специфичность, !important и слои @layer."
+    />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "name": "Grasp Cascade",
+            "url": "https://grasp-cascade.dev/",
+            "inLanguage": "ru",
+            "description": "Интерактивный тренажёр каскада CSS для новичков и мидлов, которые изучают фронтенд."
+          },
+          {
+            "@type": "LearningResource",
+            "name": "Каскад CSS по шагам",
+            "url": "https://grasp-cascade.dev/",
+            "inLanguage": "ru",
+            "isAccessibleForFree": true,
+            "learningResourceType": "интерактивный тренажёр",
+            "educationalLevel": ["Beginner", "Intermediate"],
+            "audience": {
+              "@type": "EducationalAudience",
+              "educationalRole": "student",
+              "audienceType": "Новички и мидлы, которые изучают фронтенд"
+            },
+            "teaches": ["Каскад CSS", "Специфичность селекторов", "!important", "Слои @layer"],
+            "description": "Пошаговый разбор, почему у элемента победило именно это значение: вес селектора, важность !important, слой @layer и порядок в исходнике."
+          }
+        ]
+      }
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -20,6 +67,17 @@
   </head>
   <body>
     <div id="root"></div>
+    <noscript>
+      <main>
+        <h1>Каскад CSS по шагам</h1>
+        <p>
+          Grasp Cascade — интерактивный тренажёр для тех, кто изучает фронтенд. Новичкам он показывает, почему одно CSS-правило побеждает другое. Мидлам помогает разобрать специфичность селектора, флаг !important и слои @layer на конкретных примерах.
+        </p>
+        <p>
+          На каждом шаге видно, какой селектор подошёл к элементу, какой у него вес и какое объявление из-за этого выбыло. Код можно изменить и пересчитать каскад заново.
+        </p>
+      </main>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
