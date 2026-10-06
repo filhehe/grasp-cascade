@@ -1,3 +1,4 @@
+import { track } from '@vercel/analytics'
 import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { EXAMPLES, LEVELS } from '../examples.ts'
 import type { Level } from '../engine/model.ts'
@@ -157,7 +158,7 @@ export function Toolbar({ onTour }: { onTour: () => void }) {
         >
           Обзор
         </button>
-        <a className="toolbar-btn header-thanks header-bar-action" href="https://pay.cloudtips.ru/p/02f62c5c" target="_blank" rel="noopener noreferrer">
+        <a className="toolbar-btn header-thanks header-bar-action" href="https://pay.cloudtips.ru/p/02f62c5c" target="_blank" rel="noopener noreferrer" onClick={() => track('say_thanks')}>
           Сказать спасибо
         </a>
         <button
@@ -203,7 +204,16 @@ export function Toolbar({ onTour }: { onTour: () => void }) {
               >
                 Обзор
               </button>
-              <a className="toolbar-btn header-thanks" href="https://pay.cloudtips.ru/p/02f62c5c" target="_blank" rel="noopener noreferrer" onClick={() => setMenu(false)}>
+              <a
+                className="toolbar-btn header-thanks"
+                href="https://pay.cloudtips.ru/p/02f62c5c"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => {
+                  track('say_thanks')
+                  setMenu(false)
+                }}
+              >
                 Сказать спасибо
               </a>
             </div>
