@@ -1,0 +1,12 @@
+---
+description: Не возвращать зависание вкладки при открытии селектов. После правок запускать npm test.
+alwaysApply: true
+---
+
+Открытие селектов «Уровень» и «Пример» вешало вкладку. Причина: `place()` на `scroll` читал `offsetHeight` и писал `style.left` / `style.top` / `style.width`. Запись позиции снова слала `scroll`, флаг повторного входа сбрасывался до следующего события.
+
+Меню позиционируется только CSS (`position: absolute` у кнопки). Не подписывать селект на `scroll`, не читать `scrollWidth` или `getBoundingClientRect`, чтобы поставить меню, не писать `left` / `top` / `width` из JS.
+
+После каждой правки запускать `npm test`. В него входят `src/components/selectOpen.test.ts` и `src/components/sampleHost.test.ts`.
+
+Превью элемента не должно создавать `html`, `head` или `body`: браузер выносит их из `div`, и при смене примера React падает на `removeChild`. Тег в превью берётся из `sampleHost`.
